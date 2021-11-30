@@ -22,13 +22,6 @@ public void OnPluginStart()
 	HookEvent("round_start", RoundStart);
 	
 	HookEvent("player_death", OnClientDead);
-	
-	RegConsoleCmd("sm_test", Cs, "");
-}
-
-public Action Cs(int client, int args)
-{
-	EbeSor().Display(client, 0);
 }
 
 public Action RoundStart(Event event, const char[] name, bool dB)
