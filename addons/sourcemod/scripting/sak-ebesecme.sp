@@ -22,6 +22,20 @@ public void OnPluginStart()
 	HookEvent("round_start", RoundStart);
 	
 	HookEvent("player_death", OnClientDead);
+	
+	AddCommandListener(FilterCommand_DisableChangeTeam, "jointeam");
+	AddCommandListener(FilterCommand_DisableChangeTeam, "teammenu");
+}
+
+public Action FilterCommand_DisableChangeTeam(int client, const char[] command, int argc)
+{
+	PrintToChat(client, "[SM] Takım değiştirme şu an \x07kapalı.");
+	return Plugin_Handled;
+}
+
+public void OnClientPostAdminCheck(int client)
+{
+	ChangeClientTeam(client, 3);
 }
 
 public Action RoundStart(Event event, const char[] name, bool dB)
