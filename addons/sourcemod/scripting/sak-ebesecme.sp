@@ -1,19 +1,17 @@
 #include <sourcemod>
-#include <sdktools_functions>
+#include <sdktools>
 
 #pragma semicolon 1
 #pragma newdecls required
 
 bool block = false;
 
-#define LoopClientsValid(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsValidClient(%1))
-
 public Plugin myinfo = 
 {
 	name = "Saklanbaç Sonakalan Ebe Seçme", 
 	author = "ByDexter", 
 	description = "", 
-	version = "1.0", 
+	version = "1.1", 
 	url = "https://steamcommunity.com/id/ByDexterTR - ByDexter#5494"
 };
 
@@ -40,7 +38,13 @@ public void OnClientPostAdminCheck(int client)
 
 public Action RoundStart(Event event, const char[] name, bool dB)
 {
-	if (GetTeamClientCount(3) <= 1)
+	block = false;
+	int CT = 0;
+	for (int i = 1; i <= MaxClients; i++)if (IsValidClient(i) && GetClientTeam(i) == 3)
+	{
+		CT++;
+	}
+	if (CT <= 1)
 	{
 		block = true;
 	}
@@ -48,38 +52,41 @@ public Action RoundStart(Event event, const char[] name, bool dB)
 
 public Action OnClientDead(Event event, const char[] name, bool dB)
 {
-	int client = GetClientOfUserId(event.GetInt("userid"));
-	if (IsValidClient(client) && GetClientTeam(client) == 3)
+	if (!block)
 	{
-		if (!block)
+		int CT = 0;
+		for (int i = 1; i <= MaxClients; i++)if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == 3)
 		{
-			if (GetTeamClientCount(3) == 1)
+			CT++;
+		}
+		if (CT <= 1)
+		{
+			for (int i = 1; i <= MaxClients; i++)if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == 3)
 			{
-				LoopClientsValid(i)
-				{
-					if (IsPlayerAlive(i) && GetClientTeam(i) == 3)
-					{
-						EbeSor().Display(i, 0);
-					}
-				}
+				EbeSor().Display(i, 15);
 			}
 		}
-		else
+	}
+	else
+	{
+		int CT = 0;
+		for (int i = 1; i <= MaxClients; i++)if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == 3)
 		{
-			if (GetTeamClientCount(3) == 0)
+			CT++;
+		}
+		if (CT <= 0)
+		{
+			for (int i = 1; i <= MaxClients; i++)if (IsValidClient(i))
 			{
-				LoopClientsValid(i)
+				if (GetClientTeam(i) == 3)
 				{
-					if (GetClientTeam(i) == 3)
-					{
-						ForcePlayerSuicide(i);
-						ChangeClientTeam(i, 2);
-					}
-					else if (GetClientTeam(i) == 2)
-					{
-						ForcePlayerSuicide(i);
-						ChangeClientTeam(i, 3);
-					}
+					ForcePlayerSuicide(i);
+					ChangeClientTeam(i, 2);
+				}
+				else if (GetClientTeam(i) == 2)
+				{
+					ForcePlayerSuicide(i);
+					ChangeClientTeam(i, 3);
 				}
 			}
 		}
@@ -91,16 +98,16 @@ Menu EbeSor()
 	Menu menu = new Menu(Menu_Callback);
 	char name[128], userid[32];
 	menu.SetTitle("★ Ebe Seç ★\n ");
-	LoopClientsValid(i)
+	menu.AddItem(" ", " ", ITEMDRAW_NOTEXT);
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (GetClientTeam(i) == 3)
+		if (IsValidClient(i) && GetClientTeam(i) == 3)
 		{
 			GetClientName(i, name, 128);
 			FormatEx(userid, 32, "%d", GetClientUserId(i));
 			menu.AddItem(userid, name);
 		}
 	}
-	menu.AddItem(" ", " ", ITEMDRAW_NOTEXT);
 	return menu;
 }
 
@@ -112,9 +119,9 @@ public int Menu_Callback(Menu menu, MenuAction action, int client, int position)
 		menu.GetItem(position, item, 32);
 		int target = GetClientOfUserId(StringToInt(item));
 		PrintToChatAll("[SM] \x10%N\x01, \x10%N \x01tarafından Ebe seçildi", target, client);
-		LoopClientsValid(i)
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (GetClientTeam(i) == 2)
+			if (IsValidClient(i) && GetClientTeam(i) == 2)
 			{
 				ChangeClientTeam(i, 3);
 				ForcePlayerSuicide(i);
@@ -131,5 +138,5 @@ public int Menu_Callback(Menu menu, MenuAction action, int client, int position)
 
 bool IsValidClient(int client, bool nobots = true)
 {
-	return client >= 1 && client <= MaxClients && IsClientInGame(client) && !IsClientSourceTV(client) && IsClientConnected(client) && (nobots && !IsFakeClient(client));
+	return client >= 1 && client <= MaxClients && IsValidClient(client) && !IsClientSourceTV(client) && IsClientConnected(client) && (nobots && !IsFakeClient(client));
 } 
